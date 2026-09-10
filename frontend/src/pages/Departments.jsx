@@ -17,7 +17,7 @@ function Departments() {
   const token = localStorage.getItem("token");
 
   const API = axios.create({
-    baseURL: API_URL,
+    baseURL: API,
     headers: {
       Authorization: `Bearer ${token}`,
     },

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+
 const API = "https://hrms-management-system-147q.onrender.com";
 
 function Departments() {
@@ -16,7 +17,7 @@ function Departments() {
 
   const token = localStorage.getItem("token");
 
-  const API = axios.create({
+  const api = axios.create({
     baseURL: API,
     headers: {
       Authorization: `Bearer ${token}`,

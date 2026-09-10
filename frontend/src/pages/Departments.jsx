@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-
-https://_URL = "https://hrms-management-system-147q.onrender.com";
+const API = "https://hrms-management-system-147q.onrender.com";
 
 function Departments() {
   const [departments, setDepartments] = useState([]);

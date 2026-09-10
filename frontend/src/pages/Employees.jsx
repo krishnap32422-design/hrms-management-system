@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./Employees.css";
 
-https:// = "https://hrms-management-system-147q.onrender.com";
+const API = "https://hrms-management-system-147q.onrender.com";
 
 function Employees() {
   const [employees, setEmployees] = useState([]);

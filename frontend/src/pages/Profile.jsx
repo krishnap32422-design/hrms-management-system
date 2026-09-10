@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-https:// = "https://://hrms-management-system-147q.onrender.com";
+https:// = "https://hrms-management-system-147q.onrender.com";
 
 function Profile() {
   const [profile, setProfile] = useState(null);

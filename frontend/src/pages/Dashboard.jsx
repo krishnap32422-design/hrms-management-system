@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = "http://127.0.0.1:8000";
+const API = "http://https://hrms-management-system-147q.onrender.com";
 
 // =========================
 // GET ROLE FROM JWT

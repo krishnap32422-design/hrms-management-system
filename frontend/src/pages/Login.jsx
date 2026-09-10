@@ -16,7 +16,7 @@ function Login() {
 
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/auth/login",
+        "http://https://hrms-management-system-147q.onrender.com/auth/login",
         {
           email: email,
           password: password

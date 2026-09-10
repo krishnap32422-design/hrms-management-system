@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API_URL = "https://://hrms-management-system-147q.onrender.com";
+https://_URL = "https://://hrms-management-system-147q.onrender.com";
 
 function Departments() {
   const [departments, setDepartments] = useState([]);
@@ -17,7 +17,7 @@ function Departments() {
 
   const token = localStorage.getItem("token");
 
-  const api = axios.create({
+  https:// = axios.create({
     baseURL: API_URL,
     headers: {
       Authorization: `Bearer ${token}`,

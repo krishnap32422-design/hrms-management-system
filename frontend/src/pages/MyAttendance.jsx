@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = "https://://hrms-management-system-147q.onrender.com";
+https:// = "https://://hrms-management-system-147q.onrender.com";
 
 function MyAttendance() {
   const [attendance, setAttendance] = useState([]);

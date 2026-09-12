@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -25,7 +26,28 @@ function Attendance() {
     status: "PRESENT",
   });
 
+  // ==========================================
+  // TOKEN + ROLE
+  // ==========================================
+
   const token = localStorage.getItem("token");
+
+  const getUserRole = () => {
+    try {
+      if (!token) return null;
+
+      const payload = JSON.parse(
+        atob(token.split(".")[1])
+      );
+
+      return payload.role;
+    } catch {
+      return null;
+    }
+  };
+
+  const role = getUserRole();
+  const isDemo = role === "DEMO";
 
   const config = {
     headers: {
@@ -75,6 +97,12 @@ function Attendance() {
       setEmployees(response.data);
     } catch (error) {
       console.error(error);
+
+      if (error.response?.status === 401) {
+        localStorage.removeItem("token");
+        window.location.href = "/login";
+        return;
+      }
 
       alert(
         error.response?.data?.detail ||
@@ -136,6 +164,8 @@ function Attendance() {
   // ==========================================
 
   const openAddForm = () => {
+    if (isDemo) return;
+
     setEditingId(null);
 
     const today = new Date()
@@ -158,6 +188,8 @@ function Attendance() {
   // ==========================================
 
   const openEditForm = (record) => {
+    if (isDemo) return;
+
     setEditingId(record.id);
 
     setFormData({
@@ -181,6 +213,8 @@ function Attendance() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (isDemo) return;
 
     if (!formData.employee_id) {
       alert("Please select employee");
@@ -242,6 +276,8 @@ function Attendance() {
   // ==========================================
 
   const handleCheckIn = async (employeeId) => {
+    if (isDemo) return;
+
     try {
       setSaving(true);
 
@@ -271,6 +307,8 @@ function Attendance() {
   // ==========================================
 
   const handleCheckOut = async (employeeId) => {
+    if (isDemo) return;
+
     try {
       setSaving(true);
 
@@ -300,6 +338,8 @@ function Attendance() {
   // ==========================================
 
   const handleDelete = async (id) => {
+    if (isDemo) return;
+
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this attendance record?"
     );
@@ -416,18 +456,40 @@ function Attendance() {
           <h1>Attendance</h1>
 
           <p>
-            Manage and monitor employee attendance
+            {isDemo
+              ? "Demo attendance overview"
+              : "Manage and monitor employee attendance"}
           </p>
         </div>
 
-        <button
-          className="primary-btn"
-          onClick={openAddForm}
-        >
-          + Add Attendance
-        </button>
+        {!isDemo && (
+          <button
+            className="primary-btn"
+            onClick={openAddForm}
+          >
+            + Add Attendance
+          </button>
+        )}
 
       </div>
+
+      {/* ======================================
+          DEMO NOTICE
+      ====================================== */}
+
+      {isDemo && (
+        <div className="common-card">
+          <div className="table-header">
+            <div>
+              <h2>Demo Mode</h2>
+              <p>
+                You are viewing sample attendance data.
+                Attendance actions are disabled in demo mode.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ======================================
           STATS
@@ -501,7 +563,9 @@ function Attendance() {
             <h2>Today's Attendance</h2>
 
             <p>
-              Check in or check out employees
+              {isDemo
+                ? "View sample employee attendance"
+                : "Check in or check out employees"}
             </p>
           </div>
 
@@ -580,25 +644,24 @@ function Attendance() {
 
                   <div className="today-actions">
 
-                    {!record?.check_in && (
+                    {!isDemo &&
+                      !record?.check_in && (
+                        <button
+                          className="check-in-btn"
+                          disabled={saving}
+                          onClick={() =>
+                            handleCheckIn(
+                              employee.id
+                            )
+                          }
+                        >
+                          Check In
+                        </button>
+                      )}
 
-                      <button
-                        className="check-in-btn"
-                        disabled={saving}
-                        onClick={() =>
-                          handleCheckIn(
-                            employee.id
-                          )
-                        }
-                      >
-                        Check In
-                      </button>
-
-                    )}
-
-                    {record?.check_in &&
+                    {!isDemo &&
+                      record?.check_in &&
                       !record?.check_out && (
-
                         <button
                           className="check-out-btn"
                           disabled={saving}
@@ -610,16 +673,20 @@ function Attendance() {
                         >
                           Check Out
                         </button>
-
                       )}
 
                     {record?.check_in &&
                       record?.check_out && (
-
                         <span className="completed-badge">
                           ✓ Completed
                         </span>
+                      )}
 
+                    {isDemo &&
+                      !record?.check_in && (
+                        <span className="completed-badge">
+                          Demo Record
+                        </span>
                       )}
 
                   </div>
@@ -765,7 +832,11 @@ function Attendance() {
                   <th>Check In</th>
                   <th>Check Out</th>
                   <th>Status</th>
-                  <th>Actions</th>
+
+                  {!isDemo && (
+                    <th>Actions</th>
+                  )}
+
                 </tr>
 
               </thead>
@@ -828,34 +899,36 @@ function Attendance() {
 
                       </td>
 
-                      <td>
+                      {!isDemo && (
+                        <td>
 
-                        <div className="action-buttons">
+                          <div className="action-buttons">
 
-                          <button
-                            className="edit-btn"
-                            onClick={() =>
-                              openEditForm(record)
-                            }
-                          >
-                            Edit
-                          </button>
+                            <button
+                              className="edit-btn"
+                              onClick={() =>
+                                openEditForm(record)
+                              }
+                            >
+                              Edit
+                            </button>
 
-                          <button
-                            className="delete-btn"
-                            disabled={saving}
-                            onClick={() =>
-                              handleDelete(
-                                record.id
-                              )
-                            }
-                          >
-                            Delete
-                          </button>
+                            <button
+                              className="delete-btn"
+                              disabled={saving}
+                              onClick={() =>
+                                handleDelete(
+                                  record.id
+                                )
+                              }
+                            >
+                              Delete
+                            </button>
 
-                        </div>
+                          </div>
 
-                      </td>
+                        </td>
+                      )}
 
                     </tr>
 
@@ -876,7 +949,7 @@ function Attendance() {
           ADD / EDIT MODAL
       ====================================== */}
 
-      {showForm && (
+      {showForm && !isDemo && (
 
         <div className="modal-overlay">
 

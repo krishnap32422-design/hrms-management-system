@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-const API = "https://hrms-management-system-147q.onrender.com";
+const API = "http://127.0.0.1:8000";
 
 // =========================
 // GET ROLE FROM JWT
@@ -31,9 +31,7 @@ function getUserRole() {
   }
 }
 
-
 function Dashboard() {
-
   const [role] = useState(getUserRole());
 
   const [summary, setSummary] = useState({
@@ -51,17 +49,13 @@ function Dashboard() {
 
   const token = localStorage.getItem("token");
 
-
   // ============================================================
   // FETCH DASHBOARD
   // ============================================================
 
   useEffect(() => {
-
     const fetchDashboard = async () => {
-
       try {
-
         setLoading(true);
         setError("");
 
@@ -70,13 +64,11 @@ function Dashboard() {
           return;
         }
 
-
         // ======================================================
         // EMPLOYEE DASHBOARD
         // ======================================================
 
         if (role === "EMPLOYEE") {
-
           const response = await axios.get(
             `${API}/dashboard/employee-summary`,
             {
@@ -87,16 +79,17 @@ function Dashboard() {
           );
 
           setEmployeeData(response.data);
-
         }
 
-
         // ======================================================
-        // HR / ADMIN DASHBOARD
+        // HR / ADMIN / DEMO DASHBOARD
         // ======================================================
 
-        else if (role === "HR" || role === "ADMIN") {
-
+        else if (
+          role === "HR" ||
+          role === "ADMIN" ||
+          role === "DEMO"
+        ) {
           const response = await axios.get(
             `${API}/dashboard/summary`,
             {
@@ -107,62 +100,44 @@ function Dashboard() {
           );
 
           setSummary(response.data);
-
         }
-
 
         // ======================================================
         // UNKNOWN ROLE
         // ======================================================
 
         else {
-
           setError(
             "Invalid user role. Please login again."
           );
-
         }
-
       } catch (error) {
-
         console.error(error);
 
         if (error.response?.status === 401) {
-
           localStorage.removeItem("token");
           window.location.href = "/login";
           return;
-
         }
 
         if (error.response?.status === 403) {
-
           setError(
             "You do not have permission to access this dashboard."
           );
-
           return;
-
         }
 
         setError(
           error.response?.data?.detail ||
-          "Unable to load dashboard."
+            "Unable to load dashboard."
         );
-
       } finally {
-
         setLoading(false);
-
       }
-
     };
 
-
     fetchDashboard();
-
   }, [token, role]);
-
 
   // ============================================================
   // TODAY
@@ -178,9 +153,8 @@ function Dashboard() {
     }
   );
 
-
   // ============================================================
-  // HR / ADMIN ATTENDANCE %
+  // ATTENDANCE %
   // ============================================================
 
   const attendancePercentage =
@@ -192,43 +166,32 @@ function Dashboard() {
         )
       : 0;
 
-
   // ============================================================
   // LOADING
   // ============================================================
 
   if (loading) {
-
     return (
       <div className="dashboard-page">
-
         <div className="dashboard-loading">
-
           <div className="loading-spinner"></div>
 
           <p>
             Loading dashboard...
           </p>
-
         </div>
-
       </div>
     );
-
   }
-
 
   // ============================================================
   // ERROR
   // ============================================================
 
   if (error) {
-
     return (
       <div className="dashboard-page">
-
         <div className="dashboard-error">
-
           <div className="error-icon">
             !
           </div>
@@ -240,21 +203,16 @@ function Dashboard() {
           <p>
             {error}
           </p>
-
         </div>
-
       </div>
     );
-
   }
-
 
   // ============================================================
   // EMPLOYEE DASHBOARD
   // ============================================================
 
   if (role === "EMPLOYEE") {
-
     const todayAttendance =
       employeeData?.today;
 
@@ -264,9 +222,7 @@ function Dashboard() {
     const leaves =
       employeeData?.leaves;
 
-
     return (
-
       <div className="dashboard-page">
 
         {/* ================= HEADER ================= */}
@@ -274,7 +230,6 @@ function Dashboard() {
         <div className="dashboard-header">
 
           <div>
-
             <span className="dashboard-welcome">
               Welcome back 👋
             </span>
@@ -286,12 +241,9 @@ function Dashboard() {
             <p>
               Welcome to your HRMS employee portal.
             </p>
-
           </div>
 
-
           <div className="dashboard-date">
-
             <span>
               Today
             </span>
@@ -299,11 +251,9 @@ function Dashboard() {
             <strong>
               {today}
             </strong>
-
           </div>
 
         </div>
-
 
         {/* ================= EMPLOYEE INFO ================= */}
 
@@ -312,7 +262,6 @@ function Dashboard() {
           <div className="card-heading">
 
             <div>
-
               <h2>
                 My Profile
               </h2>
@@ -320,7 +269,6 @@ function Dashboard() {
               <p>
                 Your employee information
               </p>
-
             </div>
 
             <div className="card-heading-icon">
@@ -329,11 +277,9 @@ function Dashboard() {
 
           </div>
 
-
           <div className="employee-dashboard-info">
 
             <div>
-
               <span>
                 Name
               </span>
@@ -341,12 +287,9 @@ function Dashboard() {
               <strong>
                 {employeeData?.name || "-"}
               </strong>
-
             </div>
 
-
             <div>
-
               <span>
                 Email
               </span>
@@ -354,12 +297,9 @@ function Dashboard() {
               <strong>
                 {employeeData?.email || "-"}
               </strong>
-
             </div>
 
-
             <div>
-
               <span>
                 Employee ID
               </span>
@@ -367,20 +307,15 @@ function Dashboard() {
               <strong>
                 {employeeData?.employee_id || "-"}
               </strong>
-
             </div>
 
           </div>
 
         </div>
 
-
         {/* ================= STAT CARDS ================= */}
 
         <div className="dashboard-stats">
-
-
-          {/* PRESENT DAYS */}
 
           <div className="dashboard-stat-card">
 
@@ -397,23 +332,16 @@ function Dashboard() {
             </div>
 
             <div className="stat-number">
-
               {attendance?.present_days || 0}
-
             </div>
 
             <div className="stat-bottom">
-
               <span>
                 Total days present
               </span>
-
             </div>
 
           </div>
-
-
-          {/* TOTAL LEAVES */}
 
           <div className="dashboard-stat-card">
 
@@ -430,23 +358,16 @@ function Dashboard() {
             </div>
 
             <div className="stat-number">
-
               {leaves?.total || 0}
-
             </div>
 
             <div className="stat-bottom">
-
               <span>
                 Leave requests
               </span>
-
             </div>
 
           </div>
-
-
-          {/* PENDING */}
 
           <div className="dashboard-stat-card">
 
@@ -463,23 +384,16 @@ function Dashboard() {
             </div>
 
             <div className="stat-number">
-
               {leaves?.pending || 0}
-
             </div>
 
             <div className="stat-bottom">
-
               <span>
                 Awaiting approval
               </span>
-
             </div>
 
           </div>
-
-
-          {/* APPROVED */}
 
           <div className="dashboard-stat-card">
 
@@ -496,23 +410,18 @@ function Dashboard() {
             </div>
 
             <div className="stat-number">
-
               {leaves?.approved || 0}
-
             </div>
 
             <div className="stat-bottom">
-
               <span>
                 Approved requests
               </span>
-
             </div>
 
           </div>
 
         </div>
-
 
         {/* ================= TODAY ATTENDANCE ================= */}
 
@@ -521,7 +430,6 @@ function Dashboard() {
           <div className="card-heading">
 
             <div>
-
               <h2>
                 Today's Attendance
               </h2>
@@ -529,7 +437,6 @@ function Dashboard() {
               <p>
                 Your attendance status for today
               </p>
-
             </div>
 
             <div className="card-heading-icon">
@@ -538,68 +445,49 @@ function Dashboard() {
 
           </div>
 
-
           <div className="attendance-details">
 
-
             <div className="detail-row">
 
               <div className="detail-label">
-
                 <span className="dot present-dot"></span>
-
                 Check In
-
               </div>
 
               <strong>
-
                 {todayAttendance?.check_in ||
                   "Not checked in"}
-
               </strong>
 
             </div>
 
-
             <div className="detail-row">
 
               <div className="detail-label">
-
                 <span className="dot total-dot"></span>
-
                 Check Out
-
               </div>
 
               <strong>
-
                 {todayAttendance?.check_out ||
                   "Not checked out"}
-
               </strong>
 
             </div>
 
-
             <div className="detail-row">
 
               <div className="detail-label">
-
                 <span className="dot remaining-dot"></span>
-
                 Status
-
               </div>
 
               <strong>
-
                 {todayAttendance?.checked_out
                   ? "Completed"
                   : todayAttendance?.checked_in
                   ? "Checked In"
                   : "Not Checked In"}
-
               </strong>
 
             </div>
@@ -607,7 +495,6 @@ function Dashboard() {
           </div>
 
         </div>
-
 
         {/* ================= QUICK ACTIONS ================= */}
 
@@ -616,7 +503,6 @@ function Dashboard() {
           <div className="card-heading">
 
             <div>
-
               <h2>
                 Quick Actions
               </h2>
@@ -624,14 +510,11 @@ function Dashboard() {
               <p>
                 Access your HRMS features
               </p>
-
             </div>
 
           </div>
 
-
           <div className="quick-actions">
-
 
             <button
               className="quick-action"
@@ -640,13 +523,11 @@ function Dashboard() {
                   "/my-attendance";
               }}
             >
-
               <div className="quick-action-icon">
                 📅
               </div>
 
               <div>
-
                 <strong>
                   My Attendance
                 </strong>
@@ -654,15 +535,12 @@ function Dashboard() {
                 <span>
                   View your attendance
                 </span>
-
               </div>
 
               <b>
                 ›
               </b>
-
             </button>
-
 
             <button
               className="quick-action"
@@ -671,13 +549,11 @@ function Dashboard() {
                   "/leaves";
               }}
             >
-
               <div className="quick-action-icon">
                 📝
               </div>
 
               <div>
-
                 <strong>
                   My Leaves
                 </strong>
@@ -685,15 +561,12 @@ function Dashboard() {
                 <span>
                   Apply and view leaves
                 </span>
-
               </div>
 
               <b>
                 ›
               </b>
-
             </button>
-
 
             <button
               className="quick-action"
@@ -702,13 +575,11 @@ function Dashboard() {
                   "/profile";
               }}
             >
-
               <div className="quick-action-icon">
                 👤
               </div>
 
               <div>
-
                 <strong>
                   My Profile
                 </strong>
@@ -716,33 +587,28 @@ function Dashboard() {
                 <span>
                   View your profile
                 </span>
-
               </div>
 
               <b>
                 ›
               </b>
-
             </button>
-
 
           </div>
 
         </div>
 
       </div>
-
     );
-
   }
 
+  // ============================================================
+  // DEMO / HR / ADMIN DASHBOARD
+  // ============================================================
 
-  // ============================================================
-  // HR / ADMIN DASHBOARD
-  // ============================================================
+  const isDemo = role === "DEMO";
 
   return (
-
     <div className="dashboard-page">
 
       {/* ================= HEADER ================= */}
@@ -752,19 +618,24 @@ function Dashboard() {
         <div>
 
           <span className="dashboard-welcome">
-            Welcome back 👋
+            {isDemo
+              ? "Welcome to the Demo 👋"
+              : "Welcome back 👋"}
           </span>
 
           <h1>
-            HRMS Dashboard
+            {isDemo
+              ? "HRMS Demo Dashboard"
+              : "HRMS Dashboard"}
           </h1>
 
           <p>
-            Here's what's happening in your organization today.
+            {isDemo
+              ? "Explore the HRMS with safe sample data. No real company data is used."
+              : "Here's what's happening in your organization today."}
           </p>
 
         </div>
-
 
         <div className="dashboard-date">
 
@@ -780,11 +651,36 @@ function Dashboard() {
 
       </div>
 
+      {/* ================= DEMO NOTICE ================= */}
+
+      {isDemo && (
+        <div className="dashboard-card">
+
+          <div className="card-heading">
+
+            <div>
+              <h2>
+                Demo Mode
+              </h2>
+
+              <p>
+                You are viewing sample HRMS data.
+                Management actions are disabled.
+              </p>
+            </div>
+
+            <div className="card-heading-icon">
+              👀
+            </div>
+
+          </div>
+
+        </div>
+      )}
 
       {/* ================= STAT CARDS ================= */}
 
       <div className="dashboard-stats">
-
 
         {/* EMPLOYEES */}
 
@@ -809,13 +705,14 @@ function Dashboard() {
           <div className="stat-bottom">
 
             <span>
-              Active employees
+              {isDemo
+                ? "Sample employees"
+                : "Active employees"}
             </span>
 
           </div>
 
         </div>
-
 
         {/* DEPARTMENTS */}
 
@@ -840,13 +737,14 @@ function Dashboard() {
           <div className="stat-bottom">
 
             <span>
-              Organization units
+              {isDemo
+                ? "Sample departments"
+                : "Organization units"}
             </span>
 
           </div>
 
         </div>
-
 
         {/* ATTENDANCE */}
 
@@ -878,7 +776,6 @@ function Dashboard() {
 
         </div>
 
-
         {/* LEAVES */}
 
         <div className="dashboard-stat-card">
@@ -902,7 +799,9 @@ function Dashboard() {
           <div className="stat-bottom">
 
             <span>
-              Awaiting approval
+              {isDemo
+                ? "Sample requests"
+                : "Awaiting approval"}
             </span>
 
           </div>
@@ -911,11 +810,9 @@ function Dashboard() {
 
       </div>
 
-
       {/* ================= MAIN GRID ================= */}
 
       <div className="dashboard-main-grid">
-
 
         {/* ATTENDANCE */}
 
@@ -930,7 +827,9 @@ function Dashboard() {
               </h2>
 
               <p>
-                Today's workforce attendance
+                {isDemo
+                  ? "Sample workforce attendance"
+                  : "Today's workforce attendance"}
               </p>
 
             </div>
@@ -940,7 +839,6 @@ function Dashboard() {
             </div>
 
           </div>
-
 
           <div className="attendance-content">
 
@@ -960,9 +858,7 @@ function Dashboard() {
 
             </div>
 
-
             <div className="attendance-details">
-
 
               <div className="detail-row">
 
@@ -980,7 +876,6 @@ function Dashboard() {
 
               </div>
 
-
               <div className="detail-row">
 
                 <div className="detail-label">
@@ -997,7 +892,6 @@ function Dashboard() {
 
               </div>
 
-
               <div className="detail-row">
 
                 <div className="detail-label">
@@ -1009,24 +903,20 @@ function Dashboard() {
                 </div>
 
                 <strong>
-
                   {Math.max(
                     summary.total_employees -
-                    summary.present_today,
+                      summary.present_today,
                     0
                   )}
-
                 </strong>
 
               </div>
-
 
             </div>
 
           </div>
 
         </div>
-
 
         {/* LEAVE */}
 
@@ -1041,7 +931,9 @@ function Dashboard() {
               </h2>
 
               <p>
-                Current leave requests
+                {isDemo
+                  ? "Sample leave requests"
+                  : "Current leave requests"}
               </p>
 
             </div>
@@ -1052,9 +944,7 @@ function Dashboard() {
 
           </div>
 
-
           <div className="leave-overview">
-
 
             <div className="leave-item pending-leave">
 
@@ -1076,7 +966,6 @@ function Dashboard() {
 
             </div>
 
-
             <div className="leave-item approved-leave">
 
               <div className="leave-icon-box">
@@ -1097,13 +986,11 @@ function Dashboard() {
 
             </div>
 
-
           </div>
 
         </div>
 
       </div>
-
 
       {/* ================= QUICK ACTIONS ================= */}
 
@@ -1114,20 +1001,22 @@ function Dashboard() {
           <div>
 
             <h2>
-              Quick Actions
+              {isDemo
+                ? "Explore HRMS"
+                : "Quick Actions"}
             </h2>
 
             <p>
-              Access frequently used HRMS modules
+              {isDemo
+                ? "Explore the available HRMS modules using sample data"
+                : "Access frequently used HRMS modules"}
             </p>
 
           </div>
 
         </div>
 
-
         <div className="quick-actions">
-
 
           <button
             onClick={() => {
@@ -1144,11 +1033,15 @@ function Dashboard() {
             <div>
 
               <strong>
-                Employees
+                {isDemo
+                  ? "View Employees"
+                  : "Employees"}
               </strong>
 
               <span>
-                Manage employees
+                {isDemo
+                  ? "Explore sample employee data"
+                  : "Manage employees"}
               </span>
 
             </div>
@@ -1158,7 +1051,6 @@ function Dashboard() {
             </b>
 
           </button>
-
 
           <button
             onClick={() => {
@@ -1175,11 +1067,15 @@ function Dashboard() {
             <div>
 
               <strong>
-                Departments
+                {isDemo
+                  ? "View Departments"
+                  : "Departments"}
               </strong>
 
               <span>
-                Manage departments
+                {isDemo
+                  ? "Explore sample departments"
+                  : "Manage departments"}
               </span>
 
             </div>
@@ -1189,7 +1085,6 @@ function Dashboard() {
             </b>
 
           </button>
-
 
           <button
             onClick={() => {
@@ -1206,11 +1101,15 @@ function Dashboard() {
             <div>
 
               <strong>
-                Attendance
+                {isDemo
+                  ? "View Attendance"
+                  : "Attendance"}
               </strong>
 
               <span>
-                Track attendance
+                {isDemo
+                  ? "Explore sample attendance"
+                  : "Track attendance"}
               </span>
 
             </div>
@@ -1220,7 +1119,6 @@ function Dashboard() {
             </b>
 
           </button>
-
 
           <button
             onClick={() => {
@@ -1237,11 +1135,15 @@ function Dashboard() {
             <div>
 
               <strong>
-                Leave Management
+                {isDemo
+                  ? "View Leaves"
+                  : "Leave Management"}
               </strong>
 
               <span>
-                Review leave requests
+                {isDemo
+                  ? "Explore sample leave requests"
+                  : "Review leave requests"}
               </span>
 
             </div>
@@ -1252,13 +1154,11 @@ function Dashboard() {
 
           </button>
 
-
         </div>
 
       </div>
 
     </div>
-
   );
 }
 

@@ -7,6 +7,8 @@ from app.schemas import EmployeeCreate, EmployeeResponse, EmployeeUpdate
 from app.dependencies import require_role
 from app.security import hash_password
 
+from app.demo_data import DEMO_EMPLOYEES
+
 
 router = APIRouter(
     prefix="/employees",
@@ -31,10 +33,12 @@ def get_db():
 def create_employee(
     employee: EmployeeCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(require_role(["HR", "ADMIN"]))
+    current_user: dict = Depends(
+        require_role(["HR", "ADMIN"])
+    )
 ):
 
-    # 1. Check employee code
+    # Check employee code
     existing_code = db.query(Employee).filter(
         Employee.employee_code == employee.employee_code
     ).first()
@@ -45,7 +49,7 @@ def create_employee(
             detail="Employee code already exists"
         )
 
-    # 2. Check employee email
+    # Check employee email
     existing_employee_email = db.query(Employee).filter(
         Employee.email == employee.email
     ).first()
@@ -56,7 +60,7 @@ def create_employee(
             detail="Employee email already exists"
         )
 
-    # 3. Check User email
+    # Check User email
     existing_user_email = db.query(User).filter(
         User.email == employee.email
     ).first()
@@ -67,7 +71,7 @@ def create_employee(
             detail="User account with this email already exists"
         )
 
-    # 4. Check department
+    # Check department
     if employee.department_id is not None:
 
         department = db.query(Department).filter(
@@ -87,19 +91,14 @@ def create_employee(
     new_user = User(
         name=employee.name,
         email=employee.email,
-
-        # Password will be hashed
         password_hash=hash_password(employee.password),
-
-        # Every employee gets EMPLOYEE role
         role="EMPLOYEE",
-
         is_active=True
     )
 
     db.add(new_user)
 
-    # Generate new_user.id
+    # Generate user ID
     db.flush()
 
     # =========================
@@ -114,16 +113,12 @@ def create_employee(
         desigination=employee.desigination,
         salary=employee.salary,
         department_id=employee.department_id,
-
-        # IMPORTANT
-        # Link Employee with User
         user_id=new_user.id
     )
 
     db.add(new_employee)
 
     db.commit()
-
     db.refresh(new_employee)
 
     return new_employee
@@ -137,10 +132,16 @@ def create_employee(
 def get_employees(
     db: Session = Depends(get_db),
     current_user: dict = Depends(
-        require_role(["HR", "ADMIN"])
+        require_role(["HR", "ADMIN", "DEMO"])
     )
 ):
 
+    # DEMO USER
+    # Never expose real database employees
+    if current_user.get("role") == "DEMO":
+        return DEMO_EMPLOYEES
+
+    # REAL HR / ADMIN DATA
     employees = db.query(Employee).all()
 
     return employees
@@ -155,10 +156,23 @@ def get_employee(
     employee_id: int,
     db: Session = Depends(get_db),
     current_user: dict = Depends(
-        require_role(["HR", "ADMIN"])
+        require_role(["HR", "ADMIN", "DEMO"])
     )
 ):
 
+    # DEMO USER
+    if current_user.get("role") == "DEMO":
+
+        for employee in DEMO_EMPLOYEES:
+            if employee["id"] == employee_id:
+                return employee
+
+        raise HTTPException(
+            status_code=404,
+            detail="Demo employee not found"
+        )
+
+    # REAL HR / ADMIN DATA
     employee = db.query(Employee).filter(
         Employee.id == employee_id
     ).first()
@@ -217,7 +231,6 @@ def update_employee(
         setattr(employee, field, value)
 
     db.commit()
-
     db.refresh(employee)
 
     return employee
@@ -257,4 +270,5 @@ def delete_employee(
     db.commit()
 
     return {
-        "message": "Employee and user account deleted successfully"}
+        "message": "Employee and user account deleted successfully"
+    }

@@ -3,111 +3,225 @@ import axios from "axios";
 
 const API = "https://hrms-management-system-147q.onrender.com";
 
-function Departments() {
-  const [departments, setDepartments] = useState([]);
-  const [search, setSearch] = useState("");
 
-  const [formData, setFormData] = useState({
-    name: "",
-    description: "",
-  });
+// =========================
+// GET USER ROLE FROM JWT
+// =========================
+
+function getUserRole() {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(
+      atob(
+        token
+          .split(".")[1]
+          .replace(/-/g, "+")
+          .replace(/_/g, "/")
+      )
+    );
+
+    return payload.role;
+  } catch (error) {
+    console.error("Invalid token:", error);
+    return null;
+  }
+}
+
+
+// =========================
+// DEPARTMENTS PAGE
+// =========================
+
+export default function Departments() {
+
+  const [departments, setDepartments] = useState([]);
+
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
 
   const [editingId, setEditingId] = useState(null);
-  const [loading, setLoading] = useState(false);
 
-  const token = localStorage.getItem("token");
+  const [search, setSearch] = useState("");
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [error, setError] = useState("");
+
+  const role = getUserRole();
+  const isDemo = role === "DEMO";
+
+
+  // =========================
+  // AXIOS CONFIG
+  // =========================
 
   const api = axios.create({
     baseURL: API,
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
   });
 
-  // Get Departments
+
+  api.interceptors.request.use((config) => {
+
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  });
+
+
+  // =========================
+  // FETCH DEPARTMENTS
+  // =========================
+
   const fetchDepartments = async () => {
+
     try {
+
       setLoading(true);
+      setError("");
 
       const response = await api.get("/department/");
 
       setDepartments(response.data);
-    } catch (error) {
-      console.error(error);
-      alert(
-        error.response?.data?.detail || "Failed to load departments"
+
+    } catch (err) {
+
+      console.error(err);
+
+      setError(
+        err.response?.data?.detail ||
+        "Failed to load departments"
       );
+
     } finally {
+
       setLoading(false);
+
     }
   };
 
+
   useEffect(() => {
+
     fetchDepartments();
+
   }, []);
 
-  // Input Change
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+
+  // =========================
+  // RESET FORM
+  // =========================
+
+  const resetForm = () => {
+
+    setName("");
+    setDescription("");
+    setEditingId(null);
+
   };
 
-  // Add / Update Department
+
+  // =========================
+  // ADD / UPDATE
+  // =========================
+
   const handleSubmit = async (e) => {
+
     e.preventDefault();
 
-    if (!formData.name.trim()) {
-      alert("Department name is required");
+    if (isDemo) {
       return;
     }
 
+    if (!name.trim()) {
+
+      alert("Department name is required");
+
+      return;
+    }
+
+
     try {
+
+      setSaving(true);
+
+      setError("");
+
+
+      const data = {
+        name: name.trim(),
+        description: description.trim(),
+      };
+
+
       if (editingId) {
-        // Update
-        await api.put(`/department/${editingId}`, {
-          name: formData.name,
-          description: formData.description,
-        });
+
+        await api.put(
+          `/department/${editingId}`,
+          data
+        );
 
         alert("Department updated successfully");
+
       } else {
-        // Create
-        await api.post("/department/", {
-          name: formData.name,
-          description: formData.description,
-        });
+
+        await api.post(
+          "/department/",
+          data
+        );
 
         alert("Department added successfully");
+
       }
 
-      setFormData({
-        name: "",
-        description: "",
-      });
 
-      setEditingId(null);
+      resetForm();
 
       fetchDepartments();
-    } catch (error) {
-      console.error(error);
+
+    } catch (err) {
+
+      console.error(err);
 
       alert(
-        error.response?.data?.detail ||
-          "Something went wrong"
+        err.response?.data?.detail ||
+        "Something went wrong"
       );
+
+    } finally {
+
+      setSaving(false);
+
     }
   };
 
-  // Edit
+
+  // =========================
+  // EDIT
+  // =========================
+
   const handleEdit = (department) => {
+
+    if (isDemo) {
+      return;
+    }
+
     setEditingId(department.id);
 
-    setFormData({
-      name: department.name,
-      description: department.description || "",
-    });
+    setName(department.name || "");
+
+    setDescription(
+      department.description || ""
+    );
 
     window.scrollTo({
       top: 0,
@@ -115,8 +229,17 @@ function Departments() {
     });
   };
 
-  // Delete
+
+  // =========================
+  // DELETE
+  // =========================
+
   const handleDelete = async (id) => {
+
+    if (isDemo) {
+      return;
+    }
+
     const confirmDelete = window.confirm(
       "Are you sure you want to delete this department?"
     );
@@ -125,146 +248,307 @@ function Departments() {
       return;
     }
 
+
     try {
-      await api.delete(`/department/${id}`);
+
+      await api.delete(
+        `/department/${id}`
+      );
 
       alert("Department deleted successfully");
 
       fetchDepartments();
-    } catch (error) {
-      console.error(error);
+
+    } catch (err) {
+
+      console.error(err);
 
       alert(
-        error.response?.data?.detail ||
-          "Failed to delete department"
+        err.response?.data?.detail ||
+        "Failed to delete department"
       );
     }
   };
 
-  // Cancel Edit
-  const handleCancel = () => {
-    setEditingId(null);
 
-    setFormData({
-      name: "",
-      description: "",
+  // =========================
+  // SEARCH
+  // =========================
+
+  const filteredDepartments =
+    departments.filter((department) => {
+
+      const searchText =
+        search.toLowerCase();
+
+      return (
+        department.name
+          ?.toLowerCase()
+          .includes(searchText) ||
+
+        department.description
+          ?.toLowerCase()
+          .includes(searchText)
+      );
     });
-  };
 
-  // Search
-  const filteredDepartments = departments.filter((department) =>
-    department.name
-      .toLowerCase()
-      .includes(search.toLowerCase())
-  );
+
+  // =========================
+  // UI
+  // =========================
 
   return (
+
     <div className="page-container">
 
-      {/* Page Header */}
+
+      {/* =========================
+          PAGE HEADER
+      ========================= */}
+
       <div className="page-header">
+
         <div>
+
           <h1>Departments</h1>
-          <p>Manage your organization's departments</p>
+
+          <p>
+            Manage and organize company departments
+          </p>
+
         </div>
+
+
+        {!isDemo && (
+
+          <button
+            className="primary-btn"
+            onClick={() => {
+
+              resetForm();
+
+              window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+              });
+
+            }}
+          >
+            + Add Department
+          </button>
+
+        )}
+
       </div>
 
-      {/* Department Form */}
-      <div className="common-card">
-        <div className="card-header">
-          <div>
-            <h2>
-              {editingId
-                ? "Edit Department"
-                : "Add New Department"}
-            </h2>
 
-            <p>
-              {editingId
-                ? "Update department information"
-                : "Create a new department"}
-            </p>
+      {/* =========================
+          DEMO MODE NOTICE
+      ========================= */}
+
+      {isDemo && (
+
+        <div
+          style={{
+            background: "#eef6ff",
+            border: "1px solid #cfe3ff",
+            padding: "14px 18px",
+            borderRadius: "10px",
+            marginBottom: "20px",
+            color: "#24527a",
+          }}
+        >
+
+          <strong>Demo Mode</strong>
+
+          <div
+            style={{
+              marginTop: "4px",
+              fontSize: "14px",
+            }}
+          >
+            You have read-only access.
+            Department management actions
+            are disabled in the demo.
           </div>
+
         </div>
 
-        <form onSubmit={handleSubmit} className="employee-form">
+      )}
 
-          <div className="form-group">
-            <label>Department Name *</label>
 
-            <input
-              type="text"
-              name="name"
-              placeholder="e.g. Human Resources"
-              value={formData.name}
-              onChange={handleChange}
-              required
-            />
+      {/* =========================
+          ADD / EDIT FORM
+      ========================= */}
+
+      {!isDemo && (
+
+        <div className="card">
+
+          <div className="card-header">
+
+            <div>
+
+              <h2>
+                {editingId
+                  ? "Edit Department"
+                  : "Add Department"}
+              </h2>
+
+              <p>
+                {editingId
+                  ? "Update department information"
+                  : "Create a new department"}
+              </p>
+
+            </div>
+
           </div>
 
-          <div className="form-group">
-            <label>Description</label>
 
-            <input
-              type="text"
-              name="description"
-              placeholder="Department description"
-              value={formData.description}
-              onChange={handleChange}
-            />
-          </div>
+          <form
+            onSubmit={handleSubmit}
+            className="form-grid"
+          >
 
-          <div className="form-actions">
+            <div className="form-group">
 
-            <button
-              type="submit"
-              className="primary-button"
-              disabled={loading}
+              <label>
+                Department Name
+              </label>
+
+              <input
+                type="text"
+                placeholder="e.g. Human Resources"
+                value={name}
+                onChange={(e) =>
+                  setName(e.target.value)
+                }
+              />
+
+            </div>
+
+
+            <div className="form-group">
+
+              <label>
+                Description
+              </label>
+
+              <input
+                type="text"
+                placeholder="Department description"
+                value={description}
+                onChange={(e) =>
+                  setDescription(e.target.value)
+                }
+              />
+
+            </div>
+
+
+            <div
+              style={{
+                display: "flex",
+                gap: "10px",
+                alignItems: "end",
+              }}
             >
-              {editingId
-                ? "Update Department"
-                : "Add Department"}
-            </button>
 
-            {editingId && (
               <button
-                type="button"
-                className="secondary-button"
-                onClick={handleCancel}
+                type="submit"
+                className="primary-btn"
+                disabled={saving}
               >
-                Cancel
+
+                {saving
+                  ? "Saving..."
+                  : editingId
+                  ? "Update Department"
+                  : "Add Department"}
+
               </button>
-            )}
 
-          </div>
 
-        </form>
-      </div>
+              {editingId && (
 
-      {/* Search */}
-      <div className="common-card search-card">
+                <button
+                  type="button"
+                  className="secondary-btn"
+                  onClick={resetForm}
+                >
+                  Cancel
+                </button>
 
-        <div className="search-container">
+              )}
+
+            </div>
+
+          </form>
+
+        </div>
+
+      )}
+
+
+      {/* =========================
+          SEARCH
+      ========================= */}
+
+      <div className="card">
+
+        <div className="search-row">
 
           <input
             type="text"
-            className="employee-search"
-            placeholder="Search department..."
+            placeholder="Search departments..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) =>
+              setSearch(e.target.value)
+            }
+            className="search-input"
           />
 
         </div>
 
       </div>
 
-      {/* Department Table */}
-      <div className="common-card">
+
+      {/* =========================
+          ERROR
+      ========================= */}
+
+      {error && (
+
+        <div
+          style={{
+            background: "#fff1f1",
+            color: "#b42318",
+            border: "1px solid #f3c4c4",
+            padding: "12px 16px",
+            borderRadius: "8px",
+            marginBottom: "20px",
+          }}
+        >
+          {error}
+        </div>
+
+      )}
+
+
+      {/* =========================
+          DEPARTMENT TABLE
+      ========================= */}
+
+      <div className="card">
 
         <div className="card-header">
 
           <div>
-            <h2>Department List</h2>
+
+            <h2>
+              Department List
+            </h2>
 
             <p>
               {filteredDepartments.length} department
@@ -272,115 +556,145 @@ function Departments() {
                 ? "s"
                 : ""}
             </p>
+
           </div>
 
         </div>
 
+
         {loading ? (
-          <div className="loading">
+
+          <div
+            style={{
+              padding: "30px",
+              textAlign: "center",
+            }}
+          >
             Loading departments...
           </div>
-        ) : filteredDepartments.length === 0 ? (
-          <div className="empty-state">
-            <h3>No departments found</h3>
 
-            <p>
-              Add your first department using the form
-              above.
-            </p>
+        ) : filteredDepartments.length === 0 ? (
+
+          <div
+            style={{
+              padding: "40px",
+              textAlign: "center",
+              color: "#777",
+            }}
+          >
+
+            No departments found.
+
           </div>
+
         ) : (
+
           <div className="table-container">
 
-            <table className="data-table">
+            <table>
 
               <thead>
+
                 <tr>
+
                   <th>ID</th>
-                  <th>Department Name</th>
+
+                  <th>Department</th>
+
                   <th>Description</th>
-                  <th>Employees</th>
-                  <th>Status</th>
-                  <th>Actions</th>
+
+                  {!isDemo && (
+                    <th>Actions</th>
+                  )}
+
                 </tr>
+
               </thead>
+
 
               <tbody>
 
-                {filteredDepartments.map((department) => (
+                {filteredDepartments.map(
+                  (department) => (
 
-                  <tr key={department.id}>
+                    <tr key={department.id}>
 
-                    <td>#{department.id}</td>
+                      <td>
+                        #{department.id}
+                      </td>
 
-                    <td>
-                      <strong>
-                        {department.name}
-                      </strong>
-                    </td>
 
-                    <td>
-                      {department.description ||
-                        "No description"}
-                    </td>
+                      <td>
 
-                    <td>
-                      {department.employees?.length || 0}
-                    </td>
+                        <strong>
+                          {department.name}
+                        </strong>
 
-                    <td>
-                      {department.is_active ? (
-                        <span className="status-active">
-                          Active
-                        </span>
-                      ) : (
-                        <span className="status-inactive">
-                          Inactive
-                        </span>
+                      </td>
+
+
+                      <td>
+                        {department.description ||
+                          "No description"}
+                      </td>
+
+
+                      {!isDemo && (
+
+                        <td>
+
+                          <div
+                            style={{
+                              display: "flex",
+                              gap: "8px",
+                            }}
+                          >
+
+                            <button
+                              className="secondary-btn"
+                              onClick={() =>
+                                handleEdit(
+                                  department
+                                )
+                              }
+                            >
+                              Edit
+                            </button>
+
+
+                            <button
+                              className="danger-btn"
+                              onClick={() =>
+                                handleDelete(
+                                  department.id
+                                )
+                              }
+                            >
+                              Delete
+                            </button>
+
+                          </div>
+
+                        </td>
+
                       )}
-                    </td>
 
-                    <td>
+                    </tr>
 
-                      <div className="action-buttons">
-
-                        <button
-                          className="edit-button"
-                          onClick={() =>
-                            handleEdit(department)
-                          }
-                        >
-                          Edit
-                        </button>
-
-                        <button
-                          className="delete-button"
-                          onClick={() =>
-                            handleDelete(department.id)
-                          }
-                        >
-                          Delete
-                        </button>
-
-                      </div>
-
-                    </td>
-
-                  </tr>
-
-                ))}
+                  )
+                )}
 
               </tbody>
 
             </table>
 
           </div>
+
         )}
 
       </div>
 
     </div>
+
   );
 }
-
-export default Departments;

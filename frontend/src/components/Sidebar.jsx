@@ -88,10 +88,43 @@ function Sidebar() {
     },
   ];
 
-  const menu =
-    role === "EMPLOYEE"
-      ? employeeMenu
-      : adminMenu;
+  const demoMenu = [
+    {
+      name: "Dashboard",
+      path: "/dashboard",
+      icon: "🏠",
+    },
+    {
+      name: "Employees",
+      path: "/employees",
+      icon: "👥",
+    },
+    {
+      name: "Departments",
+      path: "/departments",
+      icon: "🏢",
+    },
+    {
+      name: "Attendance",
+      path: "/attendance",
+      icon: "📅",
+    },
+    {
+      name: "Leave Management",
+      path: "/leaves",
+      icon: "📝",
+    },
+  ];
+
+  let menu;
+
+  if (role === "EMPLOYEE") {
+    menu = employeeMenu;
+  } else if (role === "DEMO") {
+    menu = demoMenu;
+  } else {
+    menu = adminMenu;
+  }
 
   return (
     <aside className="sidebar">

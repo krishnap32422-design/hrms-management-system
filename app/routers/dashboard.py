@@ -25,14 +25,35 @@ def get_db():
 # ============================================================
 # HR / ADMIN DASHBOARD
 # ============================================================
-
 @router.get("/summary")
 def dashboard_summary(
     db: Session = Depends(get_db),
     current_user: dict = Depends(
-        require_role(["ADMIN", "HR"])
+        require_role(["ADMIN", "HR", "DEMO"])
     )
 ):
+
+    # ========================================================
+    # DEMO DASHBOARD
+    # ========================================================
+    # DEMO user ko real database data nahi dikhayenge.
+    # Isliye sample data return hoga.
+
+    if current_user.get("role") == "DEMO":
+
+        return {
+            "total_employees": 12,
+            "total_departments": 4,
+            "present_today": 9,
+            "pending_leaves": 2,
+            "approved_leaves": 6
+        }
+
+
+    # ========================================================
+    # HR / ADMIN DASHBOARD
+    # ========================================================
+
     today = datetime.now().date()
 
     total_employees = db.query(Employee).count()

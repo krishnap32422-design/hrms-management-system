@@ -1,21 +1,22 @@
 from fastapi import Depends, HTTPException
-from fastapi.security import HTTPBearer,HTTPAuthorizationCredentials
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
-from app.models import User
 
+from app.models import User
 from app.security import verify_access_tolen
 from app.database import engine
 
-def get_db():  # ye pura mana o client kisi empolyee ki detail dalene ki request karega  session database open karega  phir database operation perform kargga aur phie close karge
-    db=Session(engine)
+
+def get_db():
+    db = Session(engine)
+
     try:
         yield db
     finally:
         db.close()
 
 
-security=HTTPBearer()
-
+security = HTTPBearer()
 
 
 def get_current_employee(
@@ -59,27 +60,28 @@ def get_current_employee(
     return user.employee
 
 
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security)
+):
+    token = credentials.credentials
 
-
-
-
-def get_current_user(credentials:HTTPAuthorizationCredentials=Depends(security)):
-
-    token=credentials.credentials
-
-    payload=verify_access_tolen(token)
+    payload = verify_access_tolen(token)
 
     return payload
 
-def require_role(allowed_role:list[str]):
-    def role_checked(current_user:dict=Depends(get_current_user)):
 
-        user_role=current_user.get("role")
+def require_role(allowed_role: list[str]):
+    def role_checked(
+        current_user: dict = Depends(get_current_user)
+    ):
+        user_role = current_user.get("role")
 
         if user_role not in allowed_role:
-            raise HTTPException(status_code=403,detail="you don't have permission")
+            raise HTTPException(
+                status_code=403,
+                detail="You don't have permission"
+            )
 
         return current_user
+
     return role_checked
-
-

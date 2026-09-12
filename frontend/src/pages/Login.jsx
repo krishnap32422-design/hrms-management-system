@@ -1,93 +1,88 @@
-import axios from "axios"
-import { useState } from "react"
-import { useNavigate } from "react-router-dom"
-import "../App.css"
+import axios from "axios";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import "../App.css";
+
+const API = "https://hrms-management-system-147q.onrender.com";
 
 function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-
-  const navigate = useNavigate()
-
-  // =========================
-  // NORMAL LOGIN
-  // =========================
+  const navigate = useNavigate();
 
   async function handleLogin(event) {
-    event.preventDefault()
+    event.preventDefault();
 
     try {
+      // Remove any old Demo or previous login token
+      localStorage.removeItem("token");
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/auth/demo-login",
+        `${API}/auth/login`,
         {
           email: email,
-          password: password
+          password: password,
         }
-      )
+      );
 
+      // Save the real user's token
       localStorage.setItem(
         "token",
         response.data.access_token
-      )
+      );
 
-      navigate("/dashboard")
+      navigate("/dashboard");
 
     } catch (error) {
-
-      console.log(error)
+      console.log(error);
 
       if (error.response) {
         alert(
           error.response.data.detail ||
           "Login failed"
-        )
+        );
       } else {
         alert(
           "Backend se connection nahi ho raha"
-        )
+        );
       }
     }
   }
 
-
-  // =========================
-  // DEMO LOGIN
-  // =========================
-
   async function handleDemoLogin() {
-
     try {
+      // Remove any old user token
+      localStorage.removeItem("token");
 
+      // IMPORTANT: Demo has its own endpoint
       const response = await axios.post(
-        "http://127.0.0.1:8000/auth/demo-login"
-      )
+        `${API}/auth/demo-login`
+      );
 
+      // Save Demo token
       localStorage.setItem(
         "token",
         response.data.access_token
-      )
+      );
 
-      navigate("/dashboard")
+      navigate("/dashboard");
 
     } catch (error) {
-
-      console.log(error)
+      console.log(error);
 
       if (error.response) {
         alert(
           error.response.data.detail ||
           "Demo login failed"
-        )
+        );
       } else {
         alert(
           "Backend se connection nahi ho raha"
-        )
+        );
       }
     }
   }
-
 
   return (
     <div className="login-page">
@@ -95,30 +90,16 @@ function Login() {
       <div className="login-card">
 
         <div className="login-header">
-
-          <h1>
-            HRMS
-          </h1>
-
-          <p>
-            Human Resource Management System
-          </p>
-
+          <h1>HRMS</h1>
+          <p>Human Resource Management System</p>
         </div>
-
-
-        {/* =========================
-            NORMAL LOGIN FORM
-        ========================= */}
 
         <form
           className="login-form"
           onSubmit={handleLogin}
         >
 
-          <label>
-            Email Address
-          </label>
+          <label>Email Address</label>
 
           <input
             type="email"
@@ -130,10 +111,7 @@ function Login() {
             required
           />
 
-
-          <label>
-            Password
-          </label>
+          <label>Password</label>
 
           <input
             type="password"
@@ -145,26 +123,17 @@ function Login() {
             required
           />
 
-
           <button type="submit">
             Login
           </button>
 
         </form>
 
-
-        {/* =========================
-            DEMO LOGIN
-        ========================= */}
-
         <div className="demo-login-section">
 
           <div className="demo-divider">
-            <span>
-              OR
-            </span>
+            <span>OR</span>
           </div>
-
 
           <button
             type="button"
@@ -173,7 +142,6 @@ function Login() {
           >
             🚀 Try Demo
           </button>
-
 
           <p className="demo-login-text">
             Explore the HRMS with read-only sample data.
@@ -184,7 +152,7 @@ function Login() {
       </div>
 
     </div>
-  )
+  );
 }
 
-export default Login
+export default Login;

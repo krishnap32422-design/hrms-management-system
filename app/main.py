@@ -15,7 +15,7 @@ app=FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173","https://hrms-management-system-1-ejrd.onrender.com"," https://hrms-management-hbab.onrender.com"],
+    allow_origins=["http://localhost:5173"," https://hrms-management-hbab.onrender.com"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
